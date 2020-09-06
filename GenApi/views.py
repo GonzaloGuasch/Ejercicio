@@ -1,10 +1,8 @@
 from .serializers import GenSerializer, DiseaseSerializer, VarianSerializer
 from .models import Gen, Disease, Variant
-from django.http import Http404
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 
 
 class GenesView(viewsets.ModelViewSet):
@@ -49,14 +47,25 @@ class GenesOfDiseas(APIView):
         return Response(serializer.data)
 
 
-class GenVariant(APIView):
+class VariantsOfGen(APIView):
 
     def get(self, request, id):
-        genes = Gen.objects.filter(symbol=id)
-        gen_with_id = genes.first()
-        diseases = gen_with_id.diseases.all()
+        gen = Gen.objects.filter(symbol=id)[0]
+        variants_of_gen = Variant.objects.select_related().filter(gen_symbol = gen.id)
         serializer_context = {
             'request': request,
         }
-        serializer = DiseaseSerializer(diseases, many=True, context=serializer_context)
+        serializer = VarianSerializer(variants_of_gen, many=True, context=serializer_context)
+        return Response(serializer.data)
+
+
+class GenesOfVariant(APIView):
+
+    def get(self, request, reference):
+        variant = Variant.objects.filter(reference=reference)[0]
+        gen = Gen.objects.filter(symbol=variant.gen_symbol)[0]
+        serializer_context = {
+            'request': request,
+        }
+        serializer = GenSerializer(gen, context=serializer_context)
         return Response(serializer.data)

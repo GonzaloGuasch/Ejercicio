@@ -12,6 +12,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('diseasOf/<str:id>/', views.DiseasesOfGenView.as_view(), name="genesOf"),
     path('genOf/<str:name>/', views.GenesOfDiseas.as_view(), name="diseasOf"),
-    path('genVariant/<str:name>', views.GenVariant.as_view(), name="genVariant")
+    path('variantsOfGen/<str:id>', views.VariantsOfGen.as_view(), name="variantOfGen"),
+    path('genOfVarian/<str:reference>', views.GenesOfVariant.as_view(), name="genVariant")
 
 ]
