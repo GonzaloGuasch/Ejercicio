@@ -1,78 +1,62 @@
 from .serializers import GenSerializer, DiseaseSerializer, VarianSerializer
 from .models import Gen, Disease, Variant
 from django.http import Http404
+from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 
-class GenGetAndPost(APIView):
-    def get(self, request, format=None):
-        genes = Gen.objects.all()
-        serializer_class = GenSerializer(genes, many=True)
-        return Response(serializer_class.data)
-
-    def post(self, request, format=None):
-        serializer_class = GenSerializer(data=request.data)
-        if serializer_class.is_valid():
-            serializer_class.save()
-            return Response(serializer_class.data, status=status.HTTP_201_CREATED)
-        return Response(serializer_class.error_messages, status=status.HTTP_400_BAD_REQUEST)
+class GenesView(viewsets.ModelViewSet):
+    queryset = Gen.objects.all()
+    serializer_class = GenSerializer
 
 
-class GenesDelete(APIView):
-    def get_object(self, symbol):
-        try:
-            g = Gen.objects.get(symbol=symbol)
-            return g
-        except Gen.DoesNotExist:
-            raise Http404
-
-    def delete(self, request, symbol):
-        gen = self.get_object(symbol)
-        gen.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
+class VariantView(viewsets.ModelViewSet):
+    queryset = Variant.objects.all()
+    serializer_class = VarianSerializer
 
 
-class DiseaseDetail(APIView):
-    def get(self, request, format=None):
-        diseases = Disease.objects.all()
-        serializer_class = DiseaseSerializer(diseases, many=True)
-        return Response(serializer_class.data)
-
-    def post(self, request, format=None):
-        serializer_class = DiseaseSerializer(data=request.data)
-        if serializer_class.is_valid():
-            serializer_class.save()
-            return Response(serializer_class.data, status=status.HTTP_201_CREATED)
-        return Response(serializer_class.error_messages, status=status.HTTP_400_BAD_REQUEST)
+class DiseaseView(viewsets.ModelViewSet):
+    queryset = Disease.objects.all()
+    serializer_class = DiseaseSerializer
 
 
-class DiseaseDelete(APIView):
-    def get_object(self, name):
-        try:
-            d = Disease.objects.get(name=name)
-            return d
-        except Disease.DoesNotExist:
-            raise Http404
+class DiseasesOfGenView(APIView):
 
-    def delete(self, request, name):
-        disease = self.get_object(name)
-        disease.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get(self, request, id):
+        genes = Gen.objects.filter(symbol=id)
+        gen_with_id = genes.first()
+        diseases = gen_with_id.diseases.all()
+        serializer_context = {
+            'request': request,
+        }
+        serializer = DiseaseSerializer(diseases, many=True, context=serializer_context)
+        return Response(serializer.data)
 
 
-class VariantDetail(APIView):
-    def get(self, request, format=None):
-        diseases = Variant.objects.all()
-        serializer_class = VarianSerializer(diseases, many=True)
-        return Response(serializer_class.data)
+class GenesOfDiseas(APIView):
 
-    def post(self, request, format=None):
-        serializer_class = VarianSerializer(data=request.data)
-        if serializer_class.is_valid():
-            serializer_class.save()
-            return Response(serializer_class.data, status=status.HTTP_201_CREATED)
-        return Response(serializer_class.error_messages, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request, name):
+        disease = Disease.objects.filter(name=name)
+        disease_with_name = disease.first()
+        genes = disease_with_name.gen_set.all()
+        serializer_context = {
+            'request': request,
+        }
+
+        serializer = GenSerializer(genes, many=True, context=serializer_context)
+        return Response(serializer.data)
+
+
+class GenVariant(APIView):
+
+    def get(self, request, id):
+        genes = Gen.objects.filter(symbol=id)
+        gen_with_id = genes.first()
+        diseases = gen_with_id.diseases.all()
+        serializer_context = {
+            'request': request,
+        }
+        serializer = DiseaseSerializer(diseases, many=True, context=serializer_context)
+        return Response(serializer.data)
