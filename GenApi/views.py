@@ -69,3 +69,23 @@ class GenesOfVariant(APIView):
         }
         serializer = GenSerializer(gen, context=serializer_context)
         return Response(serializer.data)
+
+
+class GenBySymbol(APIView):
+    def get(self, request, symbol):
+        gen = Gen.objects.filter(symbol=symbol)[0]
+        serializer_context = {
+            'request': request,
+        }
+        serializer = GenSerializer(gen, context=serializer_context)
+        return Response(serializer.data)
+
+
+class DiseasByName(APIView):
+    def get(self, request, name):
+        d = Disease.objects.filter(name=name)[0]
+        serializer_context = {
+            'request': request,
+        }
+        serializer = DiseaseSerializer(d, context=serializer_context)
+        return Response(serializer.data)
